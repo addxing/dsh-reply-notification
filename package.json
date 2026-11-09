@@ -1,8 +1,8 @@
 {
   "name": "dsh-reply-notification",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "type": "module",
-  "description": "macOS reply notifications for DeepSeek Harness with session titles, reply previews and foreground suppression",
+  "description": "macOS notifications for DeepSeek Harness replies and user interactions with session navigation",
   "repository": { "type": "git", "url": "git+https://github.com/addxing/dsh-reply-notification.git" },
   "homepage": "https://github.com/addxing/dsh-reply-notification#readme",
   "bugs": { "url": "https://github.com/addxing/dsh-reply-notification/issues" },
@@ -10,9 +10,9 @@
   "keywords": ["dsh", "deepseek-harness", "cordis", "notification", "macos"],
   "os": ["darwin"],
   "engines": { "node": ">=22", "dsh": ">=0.2.2-rc.1 <0.3.0" },
-  "exports": { ".": "./index.js", "./locale/*.json": "./locale/*.json", "./icon": "./icon.svg" },
-  "files": ["index.js", "notification.js", "prepare-notifier.js", "cordis.patch.yml", "locale/*.json", "icon.svg", "README.md", "LICENSE", "THIRD-PARTY-NOTICES.md", "native/Notifier.app/Contents/Info.plist", "native/Notifier.app/Contents/MacOS/terminal-notifier", "native/README.markdown"],
+  "exports": { ".": "./index.js", "./client": "./client.js", "./locale/*.json": "./locale/*.json", "./icon": "./icon.svg" },
+  "files": ["index.js", "client.js", "navigation.js", "click-bridge.js", "notification.js", "prepare-notifier.js", "cordis.patch.yml", "locale/*.json", "icon.svg", "README.md", "LICENSE", "THIRD-PARTY-NOTICES.md", "native/Notifier.app/Contents/Info.plist", "native/Notifier.app/Contents/MacOS/terminal-notifier", "native/README.markdown"],
   "scripts": { "test": "node --test test/*.test.js" },
   "publishConfig": { "access": "public", "registry": "https://registry.npmjs.org" },
-  "dsh": { "bundle": { "patch": "./cordis.patch.yml" } }
+  "dsh": { "bundle": { "patch": "./cordis.patch.yml" }, "client": { "platform": "web", "inject": ["@deepseek-ai/dsh-client-ui-workspace"] } }
 }

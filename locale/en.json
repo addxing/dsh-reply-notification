@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Reply notifications",
-    "description": "Sends shark-icon macOS notifications with session titles and reply previews when DSH is in the background. Stays silent while DSH is focused; excludes child and cancelled turns."
+    "description": "Sends macOS notifications when a reply completes or user approval, confirmation, or an answer is needed. Stays silent while DSH is focused; reply notifications exclude child and cancelled turns."
   }
 }

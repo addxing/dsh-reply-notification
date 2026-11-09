@@ -17,13 +17,18 @@ export function isDshFocused({ signal } = {}) {
 // 发送前再检查一次焦点；查询失败交给调用方记录，不误发打扰用户。
 export async function notifyUnlessFocused(notification, { signal, focused = isDshFocused, send = sendNotification } = {}) {
   if (await focused({ signal })) return false;
+  signal?.throwIfAborted();
   await send(notification, { signal });
   return true;
 }
 
 // terminal-notifier 会解析参数为 plist，前面加空格避免特殊开头导致解析失败。
-export function notifierArgs({ title, body }) {
-  return ['-title', ` ${title}`, '-message', ` ${body}`, '-sound', 'Glass'];
+export function notifierArgs({ title, body, clickCommand, openDsh }) {
+  const args = ['-title', ` ${title}`, '-message', ` ${body}`, '-sound', 'Glass'];
+  // 即使点击通道失效，也保留唤起 DSH 的能力。
+  if (clickCommand) args.push('-execute', clickCommand);
+  if (openDsh || clickCommand) args.push('-open', 'dsh://open');
+  return args;
 }
 
 // 合并换行并按 Unicode 字符截断，避免通知过长或截断 emoji。
@@ -53,11 +58,49 @@ export function buildNotification(session, event, sessionTitle) {
   };
 }
 
-export async function sendNotification({ title, body }, { signal } = {}) {
+// 待用户处理的请求只展示问题或工具名称，不暴露审批参数和工具结果。
+export function buildInputNotification(session, request, kind, sessionTitle) {
+  const question = request.questions?.find(item => typeof item.question === 'string')?.question;
+  const detail = kind === 'approval'
+    ? `需要审批${request.toolName ? `：${request.toolName}` : ''}`
+    : question ? `需要回答：${question}` : '需要你确认或回答问题。';
+  return {
+    title: notificationText(sessionTitle.get(session)?.title, 80) || `会话 ${String(session.id).slice(0, 12)}`,
+    body: notificationText(detail, 120),
+  };
+}
+
+// 只旁观交互请求，立即交给原回答方；请求结束时取消尚未发出的通知。
+export function createInputListener(kind, notify, onError) {
+  return (request, next) => {
+    const result = next();
+    if (!request.agent?.session || request.signal?.aborted) return result;
+    const controller = new AbortController();
+    const signal = request.signal ? AbortSignal.any([controller.signal, request.signal]) : controller.signal;
+    // 定时提问在无界面回答方时仍会等待，使用其原始 signal 管理通知生命周期。
+    const completion = Promise.resolve(result).then(value => {
+      controller.abort();
+      return value;
+    }, error => {
+      if (!(kind === 'question' && request.wait?.timed && request.signal && error?.code === 'NO_PROVIDER')) controller.abort();
+      throw error;
+    });
+    try {
+      Promise.resolve(notify(request.agent.session, request, kind, signal)).catch(error => {
+        if (!signal.aborted) onError(error);
+      });
+    } catch (error) {
+      if (!signal.aborted) onError(error);
+    }
+    return completion;
+  };
+}
+
+export async function sendNotification({ title, body, clickCommand, openDsh }, { signal } = {}) {
   const notifierPath = await prepareNotifier();
   signal?.throwIfAborted();
   return new Promise((resolve, reject) => {
-    execFile(notifierPath, notifierArgs({ title, body }), { signal, timeout: 10000, maxBuffer: 64 * 1024 }, (error, stdout, stderr) => {
+    execFile(notifierPath, notifierArgs({ title, body, clickCommand, openDsh }), { signal, timeout: 10000, maxBuffer: 64 * 1024 }, (error, stdout, stderr) => {
       if (error && stderr.trim()) error.message += `: ${stderr.trim()}`;
       if (error) reject(error);
       else resolve();

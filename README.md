@@ -25,6 +25,8 @@ dsh plugin --profile desktop add dsh-reply-notification
 
 安装后重新打开 Desktop，并在插件管理中启用“回复完成通知”。其他 DSH 配置可将 `desktop` 替换为对应的 profile 名称。
 
+如果终端找不到 `dsh`，可在 Desktop 的应用菜单中选择 **Manage dsh Command…** 安装命令。macOS 默认安装路径下，也可以用 `"/Applications/DeepSeek Harness.app/Contents/Resources/runtime/cli/bin/dsh"` 代替 `dsh`。
+
 要求 macOS（支持 Apple Silicon 和 Intel）、Node.js 22+、DSH 0.2.2-rc.1 或后续兼容的 0.2.x 版本。需将 DSH 安装在 `/Applications/DeepSeek Harness.app` 或 `~/Applications/DeepSeek Harness.app`。
 
 插件没有安装脚本。首次在后台发送通知时，会在用户的 `~/Library/Application Support/dsh-reply-notification/1.2.0/` 创建独立辅助应用，从本机 DSH 复制图标，使用系统 `codesign` 进行本地 ad-hoc 签名并通过 LaunchServices 注册，不修改 DSH 本体。这不是 Apple Developer 签名或公证。

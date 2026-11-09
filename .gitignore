@@ -1,0 +1,4 @@
+# 本地依赖和打包文件无需提交。
+node_modules/
+*.tgz
+.DS_Store

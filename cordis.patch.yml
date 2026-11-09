@@ -1,0 +1,4 @@
+- insert:
+    - id: dsh-reply-notification
+      name: dsh-reply-notification
+      config: {}
